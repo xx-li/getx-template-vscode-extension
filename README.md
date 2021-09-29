@@ -42,7 +42,7 @@ fork以便于修改成自定义的getx模板。
 ├── page.dart           // 页面视图
 └── request.dart        // 对应接口的封装
 
-## GetxController声明周期说明
+## GetxController生命周期说明
 
 ```dart
     /// 生命周期

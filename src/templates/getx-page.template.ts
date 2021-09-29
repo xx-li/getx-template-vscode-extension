@@ -5,10 +5,10 @@ export function entityTemplate(pageName: string, targetDirectory: string) {
   const pascalCaseName = changeCase.pascalCase(pageName.toLowerCase());
   const snakeCaseName = changeCase.snakeCase(pageName.toLowerCase());
   const targetPath = `${targetDirectory}/${pageName}/entity.dart`;
-  const template = `class CourtSearchEntity {
-  CourtSearchEntity();
-  factory CourtSearchEntity.fromJson(Map<String, dynamic> json) =>
-      CourtSearchEntity();
+  const template = `class ${pascalCaseName}Entity {
+  ${pascalCaseName}Entity();
+  factory ${pascalCaseName}Entity.fromJson(Map<String, dynamic> json) =>
+      ${pascalCaseName}Entity();
 }
 `;
 
@@ -35,10 +35,10 @@ export function requestTemplate(pageName: string, targetDirectory: string) {
   const template = `import 'package:network/network.dart';
 import 'package:base_request/base_request.dart';
 
-class CourtSearchRequest extends BaseRequest {
+class ${pascalCaseName}Request extends BaseRequest {
   final int id;
 
-  CourtSearchRequest(this.id);
+  ${pascalCaseName}Request(this.id);
 
   @override
   RequestMethod requestMethod() {
@@ -56,12 +56,12 @@ class CourtSearchRequest extends BaseRequest {
   }
 }
 
-// class CourtSearchRequest extends BaseRequest {
+// class ${pascalCaseName}Request extends BaseRequest {
 //   final int pageNum;
 //   final int pageSize;
 //   final String? name;
 
-//   CourtSearchRequest(this.pageNum, this.pageSize, {this.name});
+//   ${pascalCaseName}Request(this.pageNum, this.pageSize, {this.name});
 
 //   @override
 //   RequestMethod requestMethod() {
@@ -108,19 +108,19 @@ export function logicTemplate(pageName: string, targetDirectory: string) {
   const template = `import 'package:get/get.dart';
 import 'package:utils/utils.dart';
 
-import 'package:garbage_recycling_app/pages/court_search/request.dart';
 import 'package:garbage_recycling_app/common/base_page/base_page_logic.dart';
 
+import 'request.dart';
 import 'entity.dart';
 
-class CourtSearchLogic extends ViewNormalLogic<CourtSearchEntity> {
+class ${pascalCaseName}Logic extends ViewNormalLogic<${pascalCaseName}Entity> {
   /// 成员变量
 
   int? id;
 
   /// 生命周期
 
-  CourtSearchLogic() {
+  ${pascalCaseName}Logic() {
     var args = intFromAny(Get.parameters['id']);
     args ??= intFromAny(Get.arguments);
 
@@ -141,13 +141,13 @@ class CourtSearchLogic extends ViewNormalLogic<CourtSearchEntity> {
   /// 请求数据
 
   @override
-  Future<CourtSearchEntity?> loadData() async {
+  Future<${pascalCaseName}Entity?> loadData() async {
     if (id == null) {
       throw const FormatException("找不到设备id");
     }
-    final request = CourtSearchRequest(id!);
+    final request = ${pascalCaseName}Request(id!);
     final result = await request.start();
-    final model = CourtSearchEntity.fromJson(result.data);
+    final model = ${pascalCaseName}Entity.fromJson(result.data);
     return model;
   }
 
@@ -156,14 +156,14 @@ class CourtSearchLogic extends ViewNormalLogic<CourtSearchEntity> {
 }
 
 
-// class CourtSearchLogic extends ViewListLogic<CourtSearchEntity> {
+// class ${pascalCaseName}Logic extends ViewListLogic<${pascalCaseName}Entity> {
 //   /// 成员变量
 
 //   int? id;
 
 //   /// 生命周期
 
-//   CourtSearchLogic() {
+//   ${pascalCaseName}Logic() {
 //     var args = intFromAny(Get.parameters['id']);
 //     args ??= intFromAny(Get.arguments);
 
@@ -184,12 +184,12 @@ class CourtSearchLogic extends ViewNormalLogic<CourtSearchEntity> {
 //   /// 请求数据
 
 //   @override
-//   Future<List<CourtSearchEntity>> loadData({required int pageNum}) async {
-//     final request = CourtSearchRequest(pageNum, pageSize);
+//   Future<List<${pascalCaseName}Entity>> loadData({required int pageNum}) async {
+//     final request = ${pascalCaseName}Request(pageNum, pageSize);
 //     var result = await request.start();
 //     totalCount = result.total;
 //     List<dynamic> list = result.data ?? [];
-//     final modelList = list.map((e) => CourtSearchEntity.fromJson(e)).toList();
+//     final modelList = list.map((e) => ${pascalCaseName}Entity.fromJson(e)).toList();
 //     return modelList;
 //   }
 
@@ -220,16 +220,16 @@ export function componentsTemplate(pageName: string, targetDirectory: string) {
   const snakeCaseName = changeCase.snakeCase(pageName.toLowerCase());
   const targetPath = `${targetDirectory}/${pageName}/components.dart`;
   const template = `// 当前模板自定义UI组件放在这里
-
 import 'package:flutter/material.dart';
+
 import 'package:garbage_recycling_app/common/widget/widget_extension.dart';
 
 import 'entity.dart';
 
-class CourtSearchCell extends StatelessWidget {
-  final CourtSearchEntity entity;
+class ${pascalCaseName}Cell extends StatelessWidget {
+  final ${pascalCaseName}Entity entity;
   final GestureTapCallback onTap;
-  const CourtSearchCell({Key? key, required this.entity, required this.onTap})
+  const ${pascalCaseName}Cell({Key? key, required this.entity, required this.onTap})
       : super(key: key);
 
   @override
@@ -257,28 +257,36 @@ class CourtSearchCell extends StatelessWidget {
 
 export function pageTemplate(pageName: string, targetDirectory: string) {
   const pascalCaseName = changeCase.pascalCase(pageName.toLowerCase());
-  const snakeCaseName = changeCase.snakeCase(pageName.toLowerCase());
+  const routeName = pascalCaseName.replace(pascalCaseName[0], pascalCaseName[0].toLowerCase());
   const targetPath = `${targetDirectory}/${pageName}/page.dart`;
   const template = `import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 import 'package:garbage_recycling_app/common/base_page/base_page.dart';
 import 'package:garbage_recycling_app/common/widget/widget_factory.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 import 'logic.dart';
 import 'components.dart';
 
-class CourtSearchPage extends StatelessWidget {
-  CourtSearchPage({Key? key}) : super(key: key);
+// 路由相关代码生成在这里，复制到指定文件
+// /// 路由注释说明
+// static const ${routeName} = "/${routeName}";
+// 
+// GetPage(
+//   name: Routes.${pascalCaseName},
+//   page: () => ${pascalCaseName}Page()),
 
-  final logic = Get.put(CourtSearchLogic());
+class ${pascalCaseName}Page extends StatelessWidget {
+  ${pascalCaseName}Page({Key? key}) : super(key: key);
+
+  final logic = Get.put(${pascalCaseName}Logic());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: WidgetFactory.navigationBar("请填写标题", elevation: 0),
-        body: GetBuilder<CourtSearchLogic>(
+        body: GetBuilder<${pascalCaseName}Logic>(
           builder: (logic) => BasePage(
               viewState: logic.viewState,
               refresh: logic.requestRefresh,
@@ -287,16 +295,16 @@ class CourtSearchPage extends StatelessWidget {
   }
 }
 
-// class CourtSearchPage extends StatelessWidget {
-//   CourtSearchPage({Key? key}) : super(key: key);
+// class ${pascalCaseName}Page extends StatelessWidget {
+//   ${pascalCaseName}Page({Key? key}) : super(key: key);
 
-//   final logic = Get.put(CourtSearchLogic());
+//   final logic = Get.put(${pascalCaseName}Logic());
 
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
 //         appBar: WidgetFactory.navigationBar("请填写标题", elevation: 0),
-//         body: GetBuilder<CourtSearchLogic>(
+//         body: GetBuilder<${pascalCaseName}Logic>(
 //           builder: (logic) => BasePage(
 //               viewState: logic.viewState,
 //               refresh: logic.requestRefresh,
@@ -310,7 +318,7 @@ class CourtSearchPage extends StatelessWidget {
 //                   itemCount: logic.list.length,
 //                   itemBuilder: (context, index) {
 //                     final entity = logic.list[index];
-//                     return CourtSearchCell(
+//                     return ${pascalCaseName}Cell(
 //                         entity: entity,
 //                         onTap: () {
 //                           _onTapCell(index);
