@@ -1,45 +1,14 @@
 import * as changeCase from "change-case";
 import { existsSync, lstatSync, writeFile } from "fs";
 
-export function indexTemplate(pageName: string, targetDirectory: string) {
+export function entityTemplate(pageName: string, targetDirectory: string) {
   const pascalCaseName = changeCase.pascalCase(pageName.toLowerCase());
   const snakeCaseName = changeCase.snakeCase(pageName.toLowerCase());
-  const targetPath = `${targetDirectory}/${pageName}/index.dart`;
-  const template = `library ${snakeCaseName};
-
-export './state.dart';
-export './controller.dart';
-export './bindings.dart';
-export './view.dart';
-`;
-
-  return new Promise(async (resolve, reject) => {
-    writeFile(
-      targetPath,
-      template,
-      "utf8",
-      (error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve;
-      }
-    );
-  });
-}
-
-export function stateTemplate(pageName: string, targetDirectory: string) {
-  const pascalCaseName = changeCase.pascalCase(pageName.toLowerCase());
-  const snakeCaseName = changeCase.snakeCase(pageName.toLowerCase());
-  const targetPath = `${targetDirectory}/${pageName}/state.dart`;
-  const template = `import 'package:get/get.dart';
-
-class ${pascalCaseName}State {
-  // title
-  final _title = "".obs;
-  set title(value) => this._title.value = value;
-  get title => this._title.value;
+  const targetPath = `${targetDirectory}/${pageName}/entity.dart`;
+  const template = `class CourtSearchEntity {
+  CourtSearchEntity();
+  factory CourtSearchEntity.fromJson(Map<String, dynamic> json) =>
+      CourtSearchEntity();
 }
 `;
 
@@ -59,71 +28,213 @@ class ${pascalCaseName}State {
   });
 }
 
-export function controllerTemplate(pageName: string, targetDirectory: string) {
+export function requestTemplate(pageName: string, targetDirectory: string) {
   const pascalCaseName = changeCase.pascalCase(pageName.toLowerCase());
   const snakeCaseName = changeCase.snakeCase(pageName.toLowerCase());
-  const targetPath = `${targetDirectory}/${pageName}/controller.dart`;
+  const targetPath = `${targetDirectory}/${pageName}/request.dart`;
+  const template = `import 'package:network/network.dart';
+import 'package:base_request/base_request.dart';
+
+class CourtSearchRequest extends BaseRequest {
+  final int id;
+
+  CourtSearchRequest(this.id);
+
+  @override
+  RequestMethod requestMethod() {
+    return RequestMethod.Get;
+  }
+
+  @override
+  Future requestArgument() async {
+    return null;
+  }
+
+  @override
+  String requestUrl() {
+    return "path?id=$id";
+  }
+}
+
+// class CourtSearchRequest extends BaseRequest {
+//   final int pageNum;
+//   final int pageSize;
+//   final String? name;
+
+//   CourtSearchRequest(this.pageNum, this.pageSize, {this.name});
+
+//   @override
+//   RequestMethod requestMethod() {
+//     return RequestMethod.Get;
+//   }
+
+//   @override
+//   Future requestArgument() async {
+//     return null;
+//   }
+
+//   @override
+//   String requestUrl() {
+//     var url = "path?pageNum=$pageNum&pageSize=$pageSize";
+//     if (name != null) {
+//       url += "&name=$name";
+//     }
+//     return url;
+//   }
+// }
+  
+`;
+
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      template,
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve;
+      }
+    );
+  });
+}
+
+export function logicTemplate(pageName: string, targetDirectory: string) {
+  const pascalCaseName = changeCase.pascalCase(pageName.toLowerCase());
+  const snakeCaseName = changeCase.snakeCase(pageName.toLowerCase());
+  const targetPath = `${targetDirectory}/${pageName}/logic.dart`;
   const template = `import 'package:get/get.dart';
+import 'package:utils/utils.dart';
 
-import 'index.dart';
+import 'package:garbage_recycling_app/pages/court_search/request.dart';
+import 'package:garbage_recycling_app/common/base_page/base_page_logic.dart';
 
-class ${pascalCaseName}Controller extends GetxController {
-  ${pascalCaseName}Controller();
+import 'entity.dart';
 
-  /// 响应式成员变量
-
-  final state = ${pascalCaseName}State();
-
+class CourtSearchLogic extends ViewNormalLogic<CourtSearchEntity> {
   /// 成员变量
 
-  /// 事件
-
-  // tap
-  void handleTap(int index) {
-    Get.snackbar(
-      "标题",
-      "消息",
-    );
-  }
+  int? id;
 
   /// 生命周期
 
-  ///在 widget 内存中分配后立即调用。
-  ///你可以用它来为控制器初始化 initialize 一些东西。
-  @override
-  void onInit() {
-    super.onInit();
-    // new 对象
-    // 初始静态数据
+  CourtSearchLogic() {
+    var args = intFromAny(Get.parameters['id']);
+    args ??= intFromAny(Get.arguments);
+
+    if (args != null) {
+      id = args;
+    } else {
+      viewState = ViewState.error;
+    }
   }
 
-  ///在 onInit() 之后调用 1 帧。这是进入的理想场所
-  ///导航事件，例如 snackbar、对话框或新route，或
-  ///async 异步请求。
   @override
   void onReady() {
     super.onReady();
-    // async 拉取数据
+
+    initData();
   }
 
-  ///在 [onDelete] 方法之前调用。 [onClose] 可能用于
-  ///处理控制器使用的资源。就像 closing events 一样，
-  ///或在控制器销毁之前的流。
-  ///或者处置可能造成一些内存泄漏的对象，
-  ///像 TextEditingControllers、AnimationControllers。
-  ///将一些数据保存在磁盘上也可能很有用。
+  /// 请求数据
+
   @override
-  void onClose() {
-    super.onClose();
-    // 1 stop & close 关闭对象
-    // 2 save 持久化数据
+  Future<CourtSearchEntity?> loadData() async {
+    if (id == null) {
+      throw const FormatException("找不到设备id");
+    }
+    final request = CourtSearchRequest(id!);
+    final result = await request.start();
+    final model = CourtSearchEntity.fromJson(result.data);
+    return model;
   }
 
-  ///dispose 释放内存
+  /// 事件
+
+}
+
+
+// class CourtSearchLogic extends ViewListLogic<CourtSearchEntity> {
+//   /// 成员变量
+
+//   int? id;
+
+//   /// 生命周期
+
+//   CourtSearchLogic() {
+//     var args = intFromAny(Get.parameters['id']);
+//     args ??= intFromAny(Get.arguments);
+
+//     if (args != null) {
+//       id = args;
+//     } else {
+//       viewState = ViewState.error;
+//     }
+//   }
+
+//   @override
+//   void onReady() {
+//     super.onReady();
+
+//     setup(pageSize: 10, initialRefresh: true);
+//   }
+
+//   /// 请求数据
+
+//   @override
+//   Future<List<CourtSearchEntity>> loadData({required int pageNum}) async {
+//     final request = CourtSearchRequest(pageNum, pageSize);
+//     var result = await request.start();
+//     totalCount = result.total;
+//     List<dynamic> list = result.data ?? [];
+//     final modelList = list.map((e) => CourtSearchEntity.fromJson(e)).toList();
+//     return modelList;
+//   }
+
+
+//   /// 事件
+
+// }
+`;
+
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      template,
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve;
+      }
+    );
+  });
+}
+
+export function componentsTemplate(pageName: string, targetDirectory: string) {
+  const pascalCaseName = changeCase.pascalCase(pageName.toLowerCase());
+  const snakeCaseName = changeCase.snakeCase(pageName.toLowerCase());
+  const targetPath = `${targetDirectory}/${pageName}/components.dart`;
+  const template = `// 当前模板自定义UI组件放在这里
+
+import 'package:flutter/material.dart';
+import 'package:garbage_recycling_app/common/widget/widget_extension.dart';
+
+import 'entity.dart';
+
+class CourtSearchCell extends StatelessWidget {
+  final CourtSearchEntity entity;
+  final GestureTapCallback onTap;
+  const CourtSearchCell({Key? key, required this.entity, required this.onTap})
+      : super(key: key);
+
   @override
-  void dispose() {
-    super.dispose();
-    // dispose 释放对象
+  Widget build(BuildContext context) {
+    return Container().cellStyle(ontap: onTap, height: null);
   }
 }
 `;
@@ -144,122 +255,77 @@ class ${pascalCaseName}Controller extends GetxController {
   });
 }
 
-export function bindingsTemplate(pageName: string, targetDirectory: string) {
+export function pageTemplate(pageName: string, targetDirectory: string) {
   const pascalCaseName = changeCase.pascalCase(pageName.toLowerCase());
   const snakeCaseName = changeCase.snakeCase(pageName.toLowerCase());
-  const targetPath = `${targetDirectory}/${pageName}/bindings.dart`;
-  const template = `import 'package:get/get.dart';
-
-import 'controller.dart';
-
-class ${pascalCaseName}Binding implements Bindings {
-  @override
-  void dependencies() {
-    Get.lazyPut<${pascalCaseName}Controller>(() => ${pascalCaseName}Controller());
-  }
-}
-`;
-
-  return new Promise(async (resolve, reject) => {
-    writeFile(
-      targetPath,
-      template,
-      "utf8",
-      (error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve;
-      }
-    );
-  });
-}
-
-export function viewTemplate(pageName: string, targetDirectory: string) {
-  const pascalCaseName = changeCase.pascalCase(pageName.toLowerCase());
-  const snakeCaseName = changeCase.snakeCase(pageName.toLowerCase());
-  const targetPath = `${targetDirectory}/${pageName}/view.dart`;
+  const targetPath = `${targetDirectory}/${pageName}/page.dart`;
   const template = `import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'index.dart';
-import 'widgets/widgets.dart';
+import 'package:garbage_recycling_app/common/base_page/base_page.dart';
+import 'package:garbage_recycling_app/common/widget/widget_factory.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
-class ${pascalCaseName}Page extends GetView<${pascalCaseName}Controller> {
-  // 内容页
-  Widget _buildView() {
-    return HelloWidget();
-  }
+import 'logic.dart';
+import 'components.dart';
+
+class CourtSearchPage extends StatelessWidget {
+  CourtSearchPage({Key? key}) : super(key: key);
+
+  final logic = Get.put(CourtSearchLogic());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _buildView(),
-    );
+        appBar: WidgetFactory.navigationBar("请填写标题", elevation: 0),
+        body: GetBuilder<CourtSearchLogic>(
+          builder: (logic) => BasePage(
+              viewState: logic.viewState,
+              refresh: logic.requestRefresh,
+              noramlWidge: const Center(child: Text("请添加页面内容"))),
+        ));
   }
 }
-`;
 
-  return new Promise(async (resolve, reject) => {
-    writeFile(
-      targetPath,
-      template,
-      "utf8",
-      (error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve;
-      }
-    );
-  });
-}
+// class CourtSearchPage extends StatelessWidget {
+//   CourtSearchPage({Key? key}) : super(key: key);
 
-export function widgetsTemplate(pageName: string, targetDirectory: string) {
-  const pascalCaseName = changeCase.pascalCase(pageName.toLowerCase());
-  const snakeCaseName = changeCase.snakeCase(pageName.toLowerCase());
-  const targetPath = `${targetDirectory}/${pageName}/widgets/widgets.dart`;
-  const template = `library widgets;
+//   final logic = Get.put(CourtSearchLogic());
 
-export './hello.dart';
-`;
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//         appBar: WidgetFactory.navigationBar("请填写标题", elevation: 0),
+//         body: GetBuilder<CourtSearchLogic>(
+//           builder: (logic) => BasePage(
+//               viewState: logic.viewState,
+//               refresh: logic.requestRefresh,
+//               noramlWidge: SmartRefresher(
+//                 controller: logic.refreshController,
+//                 enablePullDown: true,
+//                 enablePullUp: logic.list.isNotEmpty,
+//                 onRefresh: logic.requestRefresh,
+//                 onLoading: logic.requestLoadMore,
+//                 child: ListView.separated(
+//                   itemCount: logic.list.length,
+//                   itemBuilder: (context, index) {
+//                     final entity = logic.list[index];
+//                     return CourtSearchCell(
+//                         entity: entity,
+//                         onTap: () {
+//                           _onTapCell(index);
+//                         });
+//                   },
+//                   separatorBuilder: (context, index) {
+//                     return WidgetFactory.textCellSepLine();
+//                   },
+//                 ),
+//               )),
+//         ));
+//   }
 
-  return new Promise(async (resolve, reject) => {
-    writeFile(
-      targetPath,
-      template,
-      "utf8",
-      (error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve;
-      }
-    );
-  });
-}
-
-export function widgetsHelloTemplate(pageName: string, targetDirectory: string) {
-  const pascalCaseName = changeCase.pascalCase(pageName.toLowerCase());
-  const snakeCaseName = changeCase.snakeCase(pageName.toLowerCase());
-  const targetPath = `${targetDirectory}/${pageName}/widgets/hello.dart`;
-  const template = `import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-
-import '../index.dart';
-
-/// hello
-class HelloWidget extends GetView<${pascalCaseName}Controller> {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Obx(() => Text(controller.state.title)),
-    );
-  }
-}
+//   void _onTapCell(int index) {}
+// }
 `;
 
   return new Promise(async (resolve, reject) => {
