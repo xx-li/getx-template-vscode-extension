@@ -15,9 +15,10 @@ fork以便于修改成自定义的getx模板。
 
 1. 文件的命名方式是`page`还是`test_plugin_page`好？
 `page`命名的方式，进入文件夹后，就可以清晰的找到目标，不会被其它字符干扰，也更加简洁。
-但是在使用`../../page.dart`类型的方式引入时，是看不到具体引入了什么文件。 但是`test_plugin_page`
+2但是在使用`../../page.dart`类型的方式引入时，是看不到具体引入了什么文件。 但是`test_plugin_page`
 的方式可以。 
-结论： 使用`page`命名的方式。引入其它模块内文件，以`package`方式引入
+另外VSCode中全局搜索文件的时候，`page`不好搜索到具体内容。
+结论： 使用`test_plugin_page`命名的方式。引入其它模块内文件，以`package`方式引入
 
 2. 是否需要`index`文件export全部的dart文件?
 使用index可以同时import模块的全部文件，但是实际使用一般只要引入view文件，所以定义为不使用index文件。

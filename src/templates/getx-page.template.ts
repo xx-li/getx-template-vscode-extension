@@ -4,7 +4,7 @@ import { existsSync, lstatSync, writeFile } from "fs";
 export function entityTemplate(pageName: string, targetDirectory: string) {
   const pascalCaseName = changeCase.pascalCase(pageName.toLowerCase());
   const snakeCaseName = changeCase.snakeCase(pageName.toLowerCase());
-  const targetPath = `${targetDirectory}/${pageName}/entity.dart`;
+  const targetPath = `${targetDirectory}/${pageName}/${pageName}_entity.dart`;
   const template = `class ${pascalCaseName}Entity {
   ${pascalCaseName}Entity();
   factory ${pascalCaseName}Entity.fromJson(Map<String, dynamic> json) =>
@@ -31,7 +31,7 @@ export function entityTemplate(pageName: string, targetDirectory: string) {
 export function requestTemplate(pageName: string, targetDirectory: string) {
   const pascalCaseName = changeCase.pascalCase(pageName.toLowerCase());
   const snakeCaseName = changeCase.snakeCase(pageName.toLowerCase());
-  const targetPath = `${targetDirectory}/${pageName}/request.dart`;
+  const targetPath = `${targetDirectory}/${pageName}/${pageName}_request.dart`;
   const template = `import 'package:network/network.dart';
 import 'package:base_request/base_request.dart';
 
@@ -104,14 +104,14 @@ class ${pascalCaseName}Request extends BaseRequest {
 export function logicTemplate(pageName: string, targetDirectory: string) {
   const pascalCaseName = changeCase.pascalCase(pageName.toLowerCase());
   const snakeCaseName = changeCase.snakeCase(pageName.toLowerCase());
-  const targetPath = `${targetDirectory}/${pageName}/logic.dart`;
+  const targetPath = `${targetDirectory}/${pageName}/${pageName}_logic.dart`;
   const template = `import 'package:get/get.dart';
 import 'package:utils/utils.dart';
 
 import 'package:garbage_recycling_app/common/base_page/base_page_logic.dart';
 
-import 'request.dart';
-import 'entity.dart';
+import '${pageName}_request.dart';
+import '${pageName}_entity.dart';
 
 class ${pascalCaseName}Logic extends ViewNormalLogic<${pascalCaseName}Entity> {
   /// 成员变量
@@ -218,13 +218,13 @@ class ${pascalCaseName}Logic extends ViewNormalLogic<${pascalCaseName}Entity> {
 export function componentsTemplate(pageName: string, targetDirectory: string) {
   const pascalCaseName = changeCase.pascalCase(pageName.toLowerCase());
   const snakeCaseName = changeCase.snakeCase(pageName.toLowerCase());
-  const targetPath = `${targetDirectory}/${pageName}/components.dart`;
+  const targetPath = `${targetDirectory}/${pageName}/${pageName}_components.dart`;
   const template = `// 当前模板自定义UI组件放在这里
 import 'package:flutter/material.dart';
 
 import 'package:garbage_recycling_app/common/widget/widget_extension.dart';
 
-import 'entity.dart';
+import '${pageName}_entity.dart';
 
 class ${pascalCaseName}Cell extends StatelessWidget {
   final ${pascalCaseName}Entity entity;
@@ -258,7 +258,7 @@ class ${pascalCaseName}Cell extends StatelessWidget {
 export function pageTemplate(pageName: string, targetDirectory: string) {
   const pascalCaseName = changeCase.pascalCase(pageName.toLowerCase());
   const routeName = pascalCaseName.replace(pascalCaseName[0], pascalCaseName[0].toLowerCase());
-  const targetPath = `${targetDirectory}/${pageName}/page.dart`;
+  const targetPath = `${targetDirectory}/${pageName}/${pageName}_page.dart`;
   const template = `import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -266,15 +266,15 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:garbage_recycling_app/common/base_page/base_page.dart';
 import 'package:garbage_recycling_app/common/widget/widget_factory.dart';
 
-import 'logic.dart';
-import 'components.dart';
+import '${pageName}_logic.dart';
+import '${pageName}_components.dart';
 
 // 路由相关代码生成在这里，复制到指定文件
 // /// 路由注释说明
 // static const ${routeName} = "/${routeName}";
 // 
 // GetPage(
-//   name: Routes.${pascalCaseName},
+//   name: Routes.${routeName},
 //   page: () => ${pascalCaseName}Page()),
 
 class ${pascalCaseName}Page extends StatelessWidget {
@@ -285,7 +285,7 @@ class ${pascalCaseName}Page extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: WidgetFactory.navigationBar("请填写标题", elevation: 0),
+        appBar: WidgetFactory.navigationBar("请填写标题"),
         body: GetBuilder<${pascalCaseName}Logic>(
           builder: (logic) => BasePage(
               viewState: logic.viewState,
